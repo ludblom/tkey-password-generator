@@ -36,6 +36,7 @@ enum state {
 	STATE_STARTED,
 	STATE_LOADING,
 	STATE_SIGNING,
+	STATE_HASHING,
 	STATE_FAILED,
 };
 
@@ -59,8 +60,6 @@ struct packet {
 static enum state started_commands(enum state state, struct context *ctx,
 				   struct packet pkt);
 static enum state loading_commands(enum state state, struct context *ctx,
-				   struct packet pkt);
-static enum state signing_commands(enum state state, struct context *ctx,
 				   struct packet pkt);
 static int read_command(struct frame_header *hdr, uint8_t *cmd);
 static void wipe_context(struct context *ctx);
@@ -286,17 +285,7 @@ static enum state loading_commands(enum state state, struct context *ctx,
 	return state;
 }
 
-// signing_commands() allows only these commands:
-//
-// - CMD_GET_SIG
-//
-// Anything else sent leads to state 'failed'.
-//
-// Arguments: the current state, the context, the incoming command
-// packet, and the secret key.
-//
-// Returns: The new state.
-static enum state signing_commands(enum state state, struct context *ctx,
+static enum state hashing_commands(enum state state, struct context *ctx,
 				   struct packet pkt)
 {
 	uint8_t rsp[CMDLEN_MAXBYTES] = {0}; // Response
@@ -326,9 +315,7 @@ static enum state signing_commands(enum state state, struct context *ctx,
 		debug_puts("Touched, now let's sign\n");
 
 		// All loaded, device touched, let's sign the message
-		crypto_ed25519_sign(signature, ctx->secret_key, ctx->message,
-				    ctx->message_size);
-
+		// crypto_sha512(signature, ctx->message, ctx->message_size);
 		debug_puts("Sending signature!\n");
 		memcpy_s(rsp + 1, CMDLEN_MAXBYTES, signature,
 			 sizeof(signature));
@@ -479,8 +466,8 @@ int main(void)
 			state = loading_commands(state, &ctx, pkt);
 			break;
 
-		case STATE_SIGNING:
-			state = signing_commands(state, &ctx, pkt);
+		case STATE_HASHING:
+			state = hashing_commands(state, &ctx, pkt);
 			break;
 
 		case STATE_FAILED:
