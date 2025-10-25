@@ -35,7 +35,6 @@ const uint32_t app_version = 0x00000003;
 enum state {
 	STATE_STARTED,
 	STATE_LOADING,
-	STATE_SIGNING,
 	STATE_HASHING,
 	STATE_FAILED,
 };
@@ -265,7 +264,7 @@ static enum state loading_commands(enum state state, struct context *ctx,
 
 		if (ctx->left == 0) {
 
-			state = STATE_SIGNING;
+			state = STATE_HASHING;
 			break;
 		}
 
@@ -315,7 +314,7 @@ static enum state hashing_commands(enum state state, struct context *ctx,
 		debug_puts("Touched, now let's sign\n");
 
 		// All loaded, device touched, let's sign the message
-		// crypto_sha512(signature, ctx->message, ctx->message_size);
+		crypto_sha512(signature, ctx->message, ctx->message_size);
 		debug_puts("Sending signature!\n");
 		memcpy_s(rsp + 1, CMDLEN_MAXBYTES, signature,
 			 sizeof(signature));

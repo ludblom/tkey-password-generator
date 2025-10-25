@@ -1,4 +1,4 @@
-[![ci](https://github.com/tillitis/tkey-device-signer/actions/workflows/ci.yaml/badge.svg?branch=main&event=push)](https://github.com/tillitis/tkey-device-signer/actions/workflows/ci.yaml)
+[![ci](https://github.com/tillitis/tkey-password-generator/actions/workflows/ci.yaml/badge.svg?branch=main&event=push)](https://github.com/tillitis/tkey-password-generator/actions/workflows/ci.yaml)
 
 # Tillitis TKey Signer
 

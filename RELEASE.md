@@ -25,7 +25,7 @@
 built with touch (the default).
 
 Complete
-[changelog](https://github.com/tillitis/tkey-device-signer/compare/v1.0.1...v1.0.2).
+[changelog](https://github.com/tillitis/tkey-password-generator/compare/v1.0.1...v1.0.2).
 
 ## v1.0.1
 
@@ -39,7 +39,7 @@ Complete
 built with touch (the default).
 
 Complete
-[changelog](https://github.com/tillitis/tkey-device-signer/compare/v1.0.0...v1.0.1).
+[changelog](https://github.com/tillitis/tkey-password-generator/compare/v1.0.0...v1.0.1).
 
 
 ## v1.0.0
@@ -54,7 +54,7 @@ Complete
 - Use CDI directly instead of copying.
 
 Complete
-[changelog](https://github.com/tillitis/tkey-device-signer/compare/v0.0.8...v1.0.0).
+[changelog](https://github.com/tillitis/tkey-password-generator/compare/v0.0.8...v1.0.0).
 
 ## v0.0.8
 
@@ -66,7 +66,7 @@ NOTE: this release changes the Tkey identity (CDI) compared to v0.0.7,
 i.e., you will not have the same Ed25519 keypair derived.
 
 Complete
-[changelog](https://github.com/tillitis/tkey-device-signer/compare/v0.0.7...v0.0.8).
+[changelog](https://github.com/tillitis/tkey-password-generator/compare/v0.0.7...v0.0.8).
 
 ## v0.0.7
 
