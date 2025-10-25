@@ -27,6 +27,7 @@ static volatile uint32_t *ver		= (volatile uint32_t *) TK1_MMIO_TK1_VERSION;
 // Touch timeout in seconds
 #define TOUCH_TIMEOUT 30
 #define MAX_SIGN_SIZE 4096
+#define CDI_SIZE 64
 
 const uint8_t app_name0[4] = "tk1 ";
 const uint8_t app_name1[4] = "sign";
@@ -314,7 +315,16 @@ static enum state hashing_commands(enum state state, struct context *ctx,
 		debug_puts("Touched, now let's sign\n");
 
 		// All loaded, device touched, let's sign the message
-		crypto_sha512(signature, ctx->message, ctx->message_size);
+		uint8_t buf[MAX_SIGN_SIZE + CDI_SIZE];
+
+		assert(ctx->message_size <= sizeof(buf) - CDI_SIZE);
+
+		memcpy(buf, ctx->message, ctx->message_size);
+		memcpy(buf + ctx->message_size, (uint8_t*)cdi, CDI_SIZE);
+		// TODO: Figure out how to properly incorporate the CDI when
+		// generating the password
+		crypto_sha512(signature, buf, ctx->message_size + CDI_SIZE);
+
 		debug_puts("Sending signature!\n");
 		memcpy_s(rsp + 1, CMDLEN_MAXBYTES, signature,
 			 sizeof(signature));
