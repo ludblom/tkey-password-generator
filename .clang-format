@@ -12,4 +12,3 @@ BraceWrapping:
 AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortEnumsOnASingleLine: false
-

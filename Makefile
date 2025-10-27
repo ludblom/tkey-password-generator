@@ -26,8 +26,8 @@ CFLAGS = -target riscv32-unknown-none-elf -march=rv32iczmmul -mabi=ilp32 -mcmode
    -Wall -Werror=implicit-function-declaration \
    -I $(INCLUDE) -I $(LIBDIR) #-DTKEY_DEBUG #-DQEMU_DEBUG
 
-ifneq ($(TKEY_SIGNER_APP_NO_TOUCH),)
-CFLAGS := $(CFLAGS) -DTKEY_SIGNER_APP_NO_TOUCH
+ifneq ($(TKEY_GENERATOR_APP_NO_TOUCH),)
+CFLAGS := $(CFLAGS) -DTKEY_GENERATOR_APP_NO_TOUCH
 endif
 
 AS = clang
@@ -37,14 +37,14 @@ LDFLAGS=-T $(LIBDIR)/app.lds -L $(LIBDIR) -lcommon -lcrt0
 
 
 .PHONY: all
-all: signer/app.bin check-signer-hash
+all: generator/app.bin check-generator-hash
 
 # Create compile_commands.json for clangd and LSP
 .PHONY: clangd
 clangd: compile_commands.json
 compile_commands.json:
 	$(MAKE) clean
-	bear -- make signer/app.bin
+	bear -- make generator/app.bin
 
 # Turn elf into bin for device
 %.bin: %.elf
@@ -55,27 +55,27 @@ show-%-hash: %/app.bin
 	@echo "Device app digest:"
 	@$(shasum) $$(dirname $^)/app.bin
 
-check-signer-hash: signer/app.bin show-signer-hash
+check-generator-hash: generator/app.bin show-generator-hash
 	@echo "Expected device app digest: "
-	@cat signer/app.bin.sha512
-	$(shasum) -c signer/app.bin.sha512
+	@cat generator/app.bin.sha512
+	$(shasum) -c generator/app.bin.sha512
 
 .PHONY: check
 check:
-	clang-tidy -header-filter=.* -checks=cert-* signer/*.[ch] -- $(CFLAGS)
+	clang-tidy -header-filter=.* -checks=cert-* generator/*.[ch] -- $(CFLAGS)
 
-# Simple ed25519 signer app
-SIGNEROBJS=signer/main.o signer/app_proto.o
-signer/app.elf: $(SIGNEROBJS)
-	$(CC) $(CFLAGS) $(SIGNEROBJS) $(LDFLAGS) -L $(LIBDIR)/monocypher -lmonocypher -I $(LIBDIR) -o $@
-$(SIGNEROBJS): $(INCLUDE)/tkey/tk1_mem.h signer/app_proto.h
+# Simple password generator app
+GENERATOROBJS=generator/main.o generator/app_proto.o
+generator/app.elf: $(GENERATOROBJS)
+	$(CC) $(CFLAGS) $(GENERATOROBJS) $(LDFLAGS) -L $(LIBDIR)/monocypher -lmonocypher -I $(LIBDIR) -o $@
+$(GENERATOROBJS): $(INCLUDE)/tkey/tk1_mem.h generator/app_proto.h
 
 .PHONY: clean
 clean:
-	rm -f signer/app.bin signer/app.elf $(SIGNEROBJS)
+	rm -f generator/app.bin generator/app.elf $(GENERATOROBJS)
 
 # Uses ../.clang-format
-FMTFILES=signer/*.[ch]
+FMTFILES=generator/*.[ch]
 
 .PHONY: fmt
 fmt:

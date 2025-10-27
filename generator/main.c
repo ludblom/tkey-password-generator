@@ -26,7 +26,7 @@ static volatile uint32_t *ver		= (volatile uint32_t *) TK1_MMIO_TK1_VERSION;
 
 // Touch timeout in seconds
 #define TOUCH_TIMEOUT 30
-#define MAX_SIGN_SIZE 4096
+#define MAX_MESSAGE_SIZE 4096
 #define CDI_SIZE 64
 
 const uint8_t app_name0[4] = "tk1 ";
@@ -45,7 +45,7 @@ struct context {
 	uint8_t secret_key[64]; // Private key. Keep this here below
 				// message in memory.
 	uint8_t pubkey[32];
-	uint8_t message[MAX_SIGN_SIZE];
+	uint8_t message[MAX_MESSAGE_SIZE];
 	uint32_t left; // Bytes left to receive
 	uint32_t message_size;
 	uint16_t msg_idx; // Where we are currently loading a message
@@ -66,7 +66,7 @@ static void wipe_context(struct context *ctx);
 
 static void wipe_context(struct context *ctx)
 {
-	crypto_wipe(ctx->message, MAX_SIGN_SIZE);
+	crypto_wipe(ctx->message, MAX_MESSAGE_SIZE);
 	ctx->left = 0;
 	ctx->message_size = 0;
 	ctx->msg_idx = 0;
@@ -187,7 +187,7 @@ static enum state started_commands(enum state state, struct context *ctx,
 				     (pkt.cmd[3] << 16) + (pkt.cmd[4] << 24);
 
 		if (local_message_size == 0 ||
-		    local_message_size > MAX_SIGN_SIZE) {
+		    local_message_size > MAX_MESSAGE_SIZE) {
 			debug_puts("Message size not within range!\n");
 			rsp[0] = STATUS_BAD;
 			appreply(pkt.hdr, RSP_SET_SIZE, rsp);
@@ -255,7 +255,7 @@ static enum state loading_commands(enum state state, struct context *ctx,
 		}
 
 		memcpy_s(&ctx->message[ctx->msg_idx],
-			 MAX_SIGN_SIZE - ctx->msg_idx, pkt.cmd + 1, nbytes);
+			 MAX_MESSAGE_SIZE - ctx->msg_idx, pkt.cmd + 1, nbytes);
 
 		ctx->msg_idx += nbytes;
 		ctx->left -= nbytes;
@@ -301,7 +301,7 @@ static enum state hashing_commands(enum state state, struct context *ctx,
 			break;
 		}
 
-#ifndef TKEY_SIGNER_APP_NO_TOUCH
+#ifndef TKEY_GENERATOR_APP_NO_TOUCH
 		touched = touch_wait(LED_GREEN, TOUCH_TIMEOUT);
 
 		if (!touched) {
@@ -315,12 +315,13 @@ static enum state hashing_commands(enum state state, struct context *ctx,
 		debug_puts("Touched, now let's sign\n");
 
 		// All loaded, device touched, let's sign the message
-		uint8_t buf[MAX_SIGN_SIZE + CDI_SIZE];
+		uint8_t buf[MAX_MESSAGE_SIZE + CDI_SIZE];
 
 		assert(ctx->message_size <= sizeof(buf) - CDI_SIZE);
 
 		memcpy(buf, ctx->message, ctx->message_size);
-		memcpy(buf + ctx->message_size, (uint8_t*)cdi, CDI_SIZE);
+		memcpy(buf + ctx->message_size, (uint8_t *)cdi, CDI_SIZE);
+
 		// TODO: Figure out how to properly incorporate the CDI when
 		// generating the password
 		crypto_sha512(signature, buf, ctx->message_size + CDI_SIZE);
@@ -452,9 +453,6 @@ int main(void)
 #ifdef TKEY_DEBUG
 	config_endpoints(IO_CDC | IO_DEBUG);
 #endif
-
-	// Generate a public key from CDI
-	crypto_ed25519_key_pair(ctx.secret_key, ctx.pubkey, (uint8_t *)cdi);
 
 	for (;;) {
 		debug_puts("parser state: ");
